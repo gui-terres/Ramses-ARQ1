@@ -1,0 +1,77 @@
+ORG h0
+
+inicio: LDR A, #0	
+	LDR X, auxiliar2 ; Zerar o vetor final
+	JZ start
+	STR A, vetor, X
+	SUB X, #h1
+	STR X, auxiliar2
+	JMP inicio
+	
+start:	LDR X, #0 ; zerando o registrador X
+	LDR B, posicao	
+	LDR A, h80
+	STR A, valor
+volta:	LDR A, valor ; Carrega o valor da posição "atual" (valor da memória percorrida) no registrador A
+	JN fNeg ; else if (valor < 0)
+	JZ fim
+	JMP fPos ; else if (valor > 0)
+
+; Realiza as operações necessária se o valor da memória analisada for positivo
+fPos:	ADD X, #h1 ; registradorX += 1 (contador de F0)
+	STR X, vetor
+	STR A, vetor, X ; guarda o valor da memória na posição adequada 
+	ADD B, #h2 ; posicao = vetor[i+2]
+	STR B, posicao 
+	LDR A, posicao, I 
+	STR A, valor 
+	JZ fim ; if (!valor)
+	SUB A, posicao ; diferença entre o valor da posição de memória e a própria posição... 
+	STR A, auxiliar ; ... essa diferença será adicionada ao valor da posição  
+	ADD B, auxiliar
+	STR B, posicao
+	LDR A, posicao, I
+	STR A, valor
+	JMP volta
+			
+
+; Realiza as operações necessária se o valor da memória analisada for negativo
+fNeg:	ADD X, #h1 ; registradorX += 1 (contador de F0)
+	STR X, vetor
+	STR A, vetor, X ; guarda o valor da memória na posição adequada 
+	ADD B, #h1 ;posicao = vetor[i+1]
+	STR B, posicao 
+	LDR A, posicao, I 
+	STR A, valor 
+	JZ fim ; if (!valor)
+	SUB A, posicao ; diferença entre o valor da posição de memória e a própria posição... 
+	STR A, auxiliar ; ... essa diferença será adicionada ao valor da posição  
+	ADD B, auxiliar
+	STR B, posicao
+	LDR A, posicao, I
+	STR A, valor
+	JMP volta		
+
+fim:	LDR A, #h80 ; seta o valor da posição para h80
+	STR A, posicao	
+	LDR A, #0 ; seta o valor da posição para zero
+	STR A, valor
+	STR A, auxiliar
+	LDR A, #hF
+	STR A, auxiliar2
+	LDR A, #h0
+	LDR B, #h0
+	LDR X, #h0 
+	HLT	
+
+
+ORG h7C
+
+posicao:	DB	h80
+valor:		DB	0
+auxiliar:	DB	0
+auxiliar2:	DB	hF
+
+ORG hF0 
+
+vetor:	DAB	[16]
